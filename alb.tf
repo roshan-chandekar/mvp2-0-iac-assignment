@@ -33,9 +33,10 @@ resource "aws_lb_target_group_attachment" "public" {
   port             = 80
 }
 
-resource "aws_lb_target_group_attachment" "private_one" {
+resource "aws_lb_target_group_attachment" "private" {
+  count            = length(aws_instance.private_web)
   target_group_arn = aws_lb_target_group.web.arn
-  target_id        = aws_instance.private_web[0].id
+  target_id        = aws_instance.private_web[count.index].id
   port             = 80
 }
 

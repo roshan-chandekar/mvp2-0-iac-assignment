@@ -22,6 +22,11 @@ output "rds_master_password" {
   sensitive   = true
 }
 
+output "rds_credentials_secret_arn" {
+  description = "ARN of the Secrets Manager secret storing RDS master credentials"
+  value       = aws_secretsmanager_secret.db_master_credentials.arn
+}
+
 output "vpc_id" {
   value = aws_vpc.main.id
 }

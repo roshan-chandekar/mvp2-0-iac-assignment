@@ -27,6 +27,14 @@ resource "aws_security_group" "ec2_web" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_ingress_cidr]
+  }
+
+  ingress {
     description     = "HTTP from ALB"
     from_port       = 80
     to_port         = 80

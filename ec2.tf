@@ -17,8 +17,8 @@ resource "aws_iam_role" "ec2" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ec2.amazonaws.com" }
     }]
   })
@@ -40,6 +40,7 @@ resource "aws_instance" "public_web" {
   subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.ec2_web.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
+  key_name               = var.ssh_key_name
   user_data              = local.nginx_user_data
 
   tags = {
@@ -55,7 +56,12 @@ resource "aws_instance" "private_web" {
   subnet_id              = aws_subnet.private_app[count.index].id
   vpc_security_group_ids = [aws_security_group.ec2_web.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
+  key_name               = var.ssh_key_name
   user_data              = local.nginx_user_data
+
+  # Private instances need outbound (NAT) to download packages during user_data.
+  # Terraform can't guarantee NAT is ready at instance creation time, so wait explicitly.
+  depends_on = [aws_nat_gateway.main]
 
   tags = {
     Name = "${var.project_name}-private-nginx-${local.azs[count.index]}"

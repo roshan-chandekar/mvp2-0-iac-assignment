@@ -3,6 +3,20 @@ resource "random_password" "db_master" {
   special = true
 }
 
+resource "aws_secretsmanager_secret" "db_master_credentials" {
+  name        = "${var.project_name}-${var.db_credentials_secret_name}"
+  description = "RDS master credentials for ${var.project_name}"
+}
+
+resource "aws_secretsmanager_secret_version" "db_master_credentials" {
+  secret_id = aws_secretsmanager_secret.db_master_credentials.id
+
+  secret_string = jsonencode({
+    username = var.db_master_username
+    password = local.db_password
+  })
+}
+
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnets"
   subnet_ids = aws_subnet.private_db[*].id
