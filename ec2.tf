@@ -2,13 +2,18 @@ locals {
   nginx_user_data = <<-EOT
     #!/bin/bash
     set -e
-    dnf install -y nginx curl
+    sudo yum update -y
+    sudo yum install -y nginx
+    sudo systemctl start nginx
+    sudo systemctl enable nginx
+    sudo mkdir -p /usr/share/nginx/html
     TOKEN=$(curl -sX PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
     IID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
     AZ=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
-    echo "<h1>Nginx on $IID ($AZ)</h1>" > /usr/share/nginx/html/index.html
-    systemctl enable nginx
-    systemctl start nginx
+    sudo tee /usr/share/nginx/html/index.html > /dev/null <<EOF
+    <h1>Hello Roshan, this is MVP2-0 IaC assignment</h1>
+    <h1>Nginx on $IID ($AZ)</h1>
+    EOF
   EOT
 }
 
