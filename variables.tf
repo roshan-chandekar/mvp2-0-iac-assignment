@@ -10,6 +10,12 @@ variable "project_name" {
   default     = "mvp2-0"
 }
 
+variable "environment" {
+  type        = string
+  description = "Environment name used for naming resources (e.g., dev, staging, prod)"
+  default     = "dev"
+}
+
 variable "vpc_cidr" {
   type    = string
   default = "10.0.0.0/16"
