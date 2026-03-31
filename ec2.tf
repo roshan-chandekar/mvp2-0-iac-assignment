@@ -64,8 +64,6 @@ resource "aws_instance" "private_web" {
   key_name               = var.ssh_key_name
   user_data              = local.nginx_user_data
 
-  # Private instances need outbound (NAT) to download packages during user_data.
-  # Terraform can't guarantee NAT is ready at instance creation time, so wait explicitly.
   depends_on = [aws_nat_gateway.main]
 
   tags = {
