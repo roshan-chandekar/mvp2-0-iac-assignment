@@ -4,7 +4,6 @@ resource "random_password" "db_master" {
 }
 
 resource "aws_secretsmanager_secret" "db_master_credentials" {
-  # Use Secrets Manager "name" like: dev/<project_name>_<resource_name>
   name        = "${var.environment}/${var.project_name}_${var.db_credentials_secret_name}"
   description = "RDS master credentials for ${var.project_name}"
 }
