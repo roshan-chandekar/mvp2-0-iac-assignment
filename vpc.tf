@@ -20,31 +20,33 @@ resource "aws_internet_gateway" "main" {
 }
 
 resource "aws_subnet" "public" {
-  count                   = 2
+  #count                   = 2
+  for_each = { for idx, az in local.azs : az => var.public_subnet_cidrs[idx] }
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  availability_zone       = local.azs[count.index]
+  cidr_block              = each.value
+  availability_zone       = each.key
   map_public_ip_on_launch = true
 
-  tags = { Name = "${var.project_name}-public-${local.azs[count.index]}" }
+  tags = { Name = "${var.project_name}-public-${each.key}" }
 }
 
 resource "aws_subnet" "private_app" {
-  count             = 2
+  #count             = 2
+  for_each = { for idx, az in local.azs : az => var.private_app_subnet_cidrs[idx] }
   vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_app_subnet_cidrs[count.index]
-  availability_zone = local.azs[count.index]
+  cidr_block        = each.value
+  availability_zone = each.key
 
-  tags = { Name = "${var.project_name}-private-app-${local.azs[count.index]}" }
+  tags = { Name = "${var.project_name}-private-app-${each.key}" }
 }
 
 resource "aws_subnet" "private_db" {
-  count             = 2
+  #count             = 2
+  for_each = { for idx, az in local.azs : az => var.private_db_subnet_cidrs[idx] }
   vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_db_subnet_cidrs[count.index]
-  availability_zone = local.azs[count.index]
-
-  tags = { Name = "${var.project_name}-private-db-${local.azs[count.index]}" }
+  cidr_block        = each.value
+  availability_zone = each.key
+  tags = { Name = "${var.project_name}-private-db-${each.key}" }
 }
 
 resource "aws_eip" "nat" {
@@ -54,7 +56,8 @@ resource "aws_eip" "nat" {
 
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
+  #subnet_id     = aws_subnet.public[0].id
+  subnet_id     = element([for s in aws_subnet.public : s.id], 0)
 
   tags = { Name = "${var.project_name}-nat" }
 
@@ -73,8 +76,8 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = 2
-  subnet_id      = aws_subnet.public[count.index].id
+  for_each       = aws_subnet.public
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public.id
 }
 
@@ -90,13 +93,13 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route_table_association" "private_app" {
-  count          = 2
-  subnet_id      = aws_subnet.private_app[count.index].id
+  for_each       = aws_subnet.private_app
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.private.id
 }
 
 resource "aws_route_table_association" "private_db" {
-  count          = 2
-  subnet_id      = aws_subnet.private_db[count.index].id
+  for_each       = aws_subnet.private_db
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.private.id
 }

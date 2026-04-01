@@ -5,9 +5,8 @@ output "alb_dns_name" {
 
 output "instance_ids" {
   value = {
-    public_web    = aws_instance.public_web.id
-    private_web_1 = aws_instance.private_web[0].id
-    private_web_2 = aws_instance.private_web[1].id
+    public_web = aws_instance.public_web.id
+    private_webs = { for az, instance in aws_instance.private_web : az => instance.id }
   }
 }
 

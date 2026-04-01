@@ -2,6 +2,9 @@ locals {
   nginx_user_data = <<-EOT
     #!/bin/bash
     set -e
+    sudo yum install -y amazon-ssm-agent
+    sudo systemctl enable amazon-ssm-agent
+    sudo systemctl start amazon-ssm-agent
     sudo yum update -y
     sudo yum install -y nginx
     sudo systemctl start nginx
@@ -42,8 +45,9 @@ resource "aws_iam_instance_profile" "ec2" {
 resource "aws_instance" "public_web" {
   ami                    = data.aws_ami.al2023.id
   instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public[0].id
-  vpc_security_group_ids = [aws_security_group.ec2_web.id]
+  #subnet_id              = values(aws_subnet.public)[0].id
+  #subnet_id              = one([for s in aws_subnet.public : s.id])
+  subnet_id = element([for s in aws_subnet.public : s.id], 0)
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
   key_name               = var.ssh_key_name
   user_data              = local.nginx_user_data
@@ -55,11 +59,10 @@ resource "aws_instance" "public_web" {
 }
 
 resource "aws_instance" "private_web" {
-  count                  = 2
+  for_each               = aws_subnet.private_app
   ami                    = data.aws_ami.al2023.id
   instance_type          = var.instance_type
-  subnet_id              = aws_subnet.private_app[count.index].id
-  vpc_security_group_ids = [aws_security_group.ec2_web.id]
+  subnet_id              = each.value.id
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
   key_name               = var.ssh_key_name
   user_data              = local.nginx_user_data
@@ -67,7 +70,7 @@ resource "aws_instance" "private_web" {
   depends_on = [aws_nat_gateway.main]
 
   tags = {
-    Name = "${var.project_name}-private-nginx-${local.azs[count.index]}"
+    Name = "${var.project_name}-private-nginx-${each.key}"
     Role = "private-web"
   }
 }

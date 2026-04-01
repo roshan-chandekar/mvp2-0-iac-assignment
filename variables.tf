@@ -73,6 +73,6 @@ variable "ssh_ingress_cidr" {
 variable "db_credentials_secret_name" {
   type        = string
   description = "Base name for the Secrets Manager secret storing RDS master credentials"
-  default     = "rds-master-credentials"
+  default     = "rds-master-credentials-2"
   sensitive   = false
 }

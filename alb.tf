@@ -3,7 +3,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
+  subnets            = [for s in aws_subnet.public : s.id]
 
   tags = { Name = "${var.project_name}-alb" }
 }
@@ -34,9 +34,9 @@ resource "aws_lb_target_group_attachment" "public" {
 }
 
 resource "aws_lb_target_group_attachment" "private" {
-  count            = length(aws_instance.private_web)
+  for_each         = aws_instance.private_web
   target_group_arn = aws_lb_target_group.web.arn
-  target_id        = aws_instance.private_web[count.index].id
+  target_id        = each.value.id
   port             = 80
 }
 

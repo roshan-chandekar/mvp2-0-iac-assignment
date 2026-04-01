@@ -19,7 +19,7 @@ resource "aws_secretsmanager_secret_version" "db_master_credentials" {
 
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnets"
-  subnet_ids = aws_subnet.private_db[*].id
+  subnet_ids = [for s in aws_subnet.private_db : s.id]
 
   tags = { Name = "${var.project_name}-db-subnet-group" }
 }
