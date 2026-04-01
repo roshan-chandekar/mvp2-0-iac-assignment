@@ -43,14 +43,14 @@ resource "aws_iam_instance_profile" "ec2" {
 }
 
 resource "aws_instance" "public_web" {
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = var.instance_type
+  ami           = data.aws_ami.al2023.id
+  instance_type = var.instance_type
   #subnet_id              = values(aws_subnet.public)[0].id
   #subnet_id              = one([for s in aws_subnet.public : s.id])
-  subnet_id = element([for s in aws_subnet.public : s.id], 0)
-  iam_instance_profile   = aws_iam_instance_profile.ec2.name
-  key_name               = var.ssh_key_name
-  user_data              = local.nginx_user_data
+  subnet_id            = element([for s in aws_subnet.public : s.id], 0)
+  iam_instance_profile = aws_iam_instance_profile.ec2.name
+  key_name             = var.ssh_key_name
+  user_data            = local.nginx_user_data
 
   tags = {
     Name = "${var.project_name}-public-nginx"
@@ -59,13 +59,13 @@ resource "aws_instance" "public_web" {
 }
 
 resource "aws_instance" "private_web" {
-  for_each               = aws_subnet.private_app
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = var.instance_type
-  subnet_id              = each.value.id
-  iam_instance_profile   = aws_iam_instance_profile.ec2.name
-  key_name               = var.ssh_key_name
-  user_data              = local.nginx_user_data
+  for_each             = aws_subnet.private_app
+  ami                  = data.aws_ami.al2023.id
+  instance_type        = var.instance_type
+  subnet_id            = each.value.id
+  iam_instance_profile = aws_iam_instance_profile.ec2.name
+  key_name             = var.ssh_key_name
+  user_data            = local.nginx_user_data
 
   depends_on = [aws_nat_gateway.main]
 
